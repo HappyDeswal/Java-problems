@@ -69,8 +69,8 @@
                      {
                         title: "Display Total Marks for 5 Students",
                         algorithm: `<ol class="list-decimal list-inside space-y-1"><li>Start.</li><li>Create a 'Student' class with attributes and methods.</li><li>In 'main', create an array of 5 'Student' objects.</li><li>Loop to create objects, get their details, and calculate totals.</li><li>Loop again to display each student's details.</li><li>Stop.</li></ol>`,
-                        code: `import java.util.Scanner;\n\nclass Student {\n    int regno; String name;\n    int[] marks = new int[3]; int total;\n\n    public void readData(Scanner s) { /* ... */ }\n    public void calculateTotal() { /* ... */ }\n    public void displayDetails() { /* ... */ }\n}\n\npublic class StudentMarks {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        Student[] students = new Student[5];\n        for (int i=0; i < 5; i++) { /* ... */ }\n        for (Student s : students) { /* ... */ }\n        scanner.close();\n    }\n}`,
-                        output: `--- Student Details ---\nRegNo   Name    Total\n101     John    245\n... (details for other students)`,
+                        code: `import java.util.Scanner;\n\nclass Student {\n    int regno;\n    String name;\n    int[] marks = new int[3];\n    int total;\n\n    public void readData(Scanner scanner, int count) {\n        System.out.println("\\nEnter details for student " + count + ":");\n        System.out.print("Enter Regno: ");\n        regno = scanner.nextInt();\n        scanner.nextLine(); // Consume newline\n        System.out.print("Enter Name: ");\n        name = scanner.nextLine();\n        System.out.println("Enter marks for 3 subjects:");\n        for (int i = 0; i < 3; i++) {\n            System.out.print("Subject " + (i + 1) + ": ");\n            marks[i] = scanner.nextInt();\n        }\n    }\n\n    public void calculateTotal() {\n        total = 0;\n        for (int mark : marks) {\n            total += mark;\n        }\n    }\n\n    public void displayDetails() {\n        System.out.println(regno + "\\t\\t" + name + "\\t\\t" + total);\n    }\n}\n\npublic class StudentMarks {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        Student[] students = new Student[5];\n\n        for (int i = 0; i < 5; i++) {\n            students[i] = new Student();\n            students[i].readData(scanner, i + 1);\n            students[i].calculateTotal();\n        }\n\n        System.out.println("\\n--- Student Details ---");\n        System.out.println("Regno\\t\\tName\\t\\tTotal");\n        for (Student s : students) {\n            s.displayDetails();\n        }\n        scanner.close();\n    }\n}`,
+                        output: `--- Student Details ---\nRegno           Name            Total\n101             John            245\n102             Jane            270\n... (details for 3 other students)`,
                         viva: [
                            { q: "Difference between a class and an object?", a: "A class is a blueprint (the `Student` class). An object is an instance of that blueprint (each of the 5 student records). The class defines structure; objects hold data." },
                            { q: "Why use `scanner.nextLine()` after `scanner.nextInt()`?", a: "`nextInt()` leaves a newline character in the input buffer. The extra `scanner.nextLine()` consumes this newline, preventing the next `nextLine()` call from being skipped." },
@@ -84,8 +84,8 @@
                 problems: [
                     {
                         title: "Player Class Inheritance",
-                        code: `class Player {\n    String name; int age;\n}\n\nclass Cricket_player extends Player {\n    int runsScored;\n    @Override\n    public void display() { /* ... */ }\n}\n\npublic class PlayerDemo { /* ... */ }`,
-                        output: `Name: Sachin, Age: 45\nSport: Cricket, Runs: 18000`,
+                        code: `class Player {\n    String name;\n    int age;\n\n    Player(String name, int age) {\n        this.name = name;\n        this.age = age;\n    }\n\n    public void display() {\n        System.out.println("Name: " + name + ", Age: " + age);\n    }\n}\n\nclass Cricket_player extends Player {\n    int runsScored;\n\n    Cricket_player(String name, int age, int runsScored) {\n        super(name, age);\n        this.runsScored = runsScored;\n    }\n\n    @Override\n    public void display() {\n        super.display();\n        System.out.println("Sport: Cricket, Runs Scored: " + runsScored);\n    }\n}\n\nclass Football_player extends Player {\n    int goalsScored;\n\n    Football_player(String name, int age, int goalsScored) {\n        super(name, age);\n        this.goalsScored = goalsScored;\n    }\n\n    @Override\n    public void display() {\n        super.display();\n        System.out.println("Sport: Football, Goals Scored: " + goalsScored);\n    }\n}\n\npublic class PlayerDemo {\n    public static void main(String[] args) {\n        Cricket_player c = new Cricket_player("Sachin", 45, 18426);\n        Football_player f = new Football_player("Ronaldo", 38, 800);\n        c.display();\n        System.out.println();\n        f.display();\n    }\n}`,
+                        output: `Name: Sachin, Age: 45\nSport: Cricket, Runs Scored: 18426\n\nName: Ronaldo, Age: 38\nSport: Football, Goals Scored: 800`,
                         viva: [
                             { q: "What is inheritance?", a: "It allows a new class (subclass) to inherit properties and methods from an existing class (superclass). It promotes code reuse and an 'is-a' relationship." },
                             { q: "What is the `super` keyword for?", a: "`super` calls the parent class constructor to initialize its fields. It can also be used to call the parent's version of an overridden method, like `super.display()`." },
@@ -95,8 +95,8 @@
                     },
                     {
                         title: "Implementing Two Interfaces",
-                        code: `interface Printable { void print(); }\ninterface Showable { void show(); }\n\nclass MyClass implements Printable, Showable {\n    public void print() { /* ... */ }\n    public void show() { /* ... */ }\n}`,
-                        output: `Printable interface method.\nShowable interface method.`,
+                        code: `interface Printable {\n    void print();\n}\n\ninterface Showable {\n    void show();\n}\n\nclass MyClass implements Printable, Showable {\n    @Override\n    public void print() {\n        System.out.println("Executing the print() method.");\n    }\n\n    @Override\n    public void show() {\n        System.out.println("Executing the show() method.");\n    }\n}\n\npublic class MultipleInterfaceDemo {\n    public static void main(String[] args) {\n        MyClass obj = new MyClass();\n        obj.print();\n        obj.show();\n    }\n}`,
+                        output: `Executing the print() method.\nExecuting the show() method.`,
                         viva: [
                             { q: "What is an interface in Java?", a: "An interface is a contract defining abstract methods. A class that implements an interface must provide an implementation for all its methods." },
                             { q: "Can you create an object of an interface?", a: "No, you cannot instantiate an interface directly as it has no implementation. You can only create an object of a class that implements it." },
@@ -105,8 +105,8 @@
                     },
                     {
                         title: "Create a Package for Book Details",
-                        code: `// File 1: bookpack/Book.java\npackage bookpack;\npublic class Book { /* ... */ }\n\n// File 2: BookDemo.java\nimport bookpack.Book;\npublic class BookDemo { /* ... */ }`,
-                        output: `The Great Gatsby by F. Scott Fitzgerald, Price: $15.99`,
+                        code: `// File 1: bookpack/Book.java\npackage bookpack;\n\npublic class Book {\n    private String name;\n    private String author;\n    private double price;\n    private int year;\n\n    public Book(String name, String author, double price, int year) {\n        this.name = name;\n        this.author = author;\n        this.price = price;\n        this.year = year;\n    }\n\n    public void display() {\n        System.out.println("Title: " + name);\n        System.out.println("Author: " + author);\n        System.out.println("Price: $" + price);\n        System.out.println("Year: " + year);\n    }\n}\n\n// File 2: BookDemo.java\n// (This file should be outside the bookpack directory)\nimport bookpack.Book;\n\npublic class BookDemo {\n    public static void main(String[] args) {\n        Book book1 = new Book("The Great Gatsby", "F. Scott Fitzgerald", 15.99, 1925);\n        book1.display();\n    }\n}`,
+                        output: `Title: The Great Gatsby\nAuthor: F. Scott Fitzgerald\nPrice: $15.99\nYear: 1925`,
                         viva: [
                             { q: "What is the main purpose of packages?", a: "To organize classes into namespaces, which prevents naming conflicts and controls access." },
                             { q: "Difference between `import bookpack.Book;` and `import bookpack.*;`?", a: "The first imports only the `Book` class. The second imports all public classes and interfaces from the `bookpack` package." },
@@ -120,8 +120,8 @@
                  problems: [
                     {
                         title: "Catch More Than One Exception",
-                        code: `try {\n    int[] numbers = new int[5];\n    System.out.println(numbers[10]);\n} catch (ArrayIndexOutOfBoundsException e) {\n    System.out.println("Error: Array index is out of bounds.");\n} catch (Exception e) {\n    System.out.println("An unexpected error occurred.");\n}`,
-                        output: `Error: Array index is out of bounds.\nProgram continues.`,
+                        code: `public class MultipleExceptions {\n    public static void main(String[] args) {\n        try {\n            int[] numbers = new int[5];\n            System.out.println("Accessing element at index 10...");\n            numbers[10] = 30 / 0; // This line won't be reached\n        } catch (ArrayIndexOutOfBoundsException e) {\n            System.out.println("Error: Array index is out of bounds.");\n            System.out.println("Exception message: " + e.getMessage());\n        } catch (ArithmeticException e) {\n            System.out.println("Error: Cannot divide by zero.");\n            System.out.println("Exception message: " + e.getMessage());\n        } catch (Exception e) {\n            System.out.println("An unexpected generic error occurred.");\n        } finally {\n            System.out.println("The 'finally' block always executes.");\n        }\n        System.out.println("Program continues after try-catch-finally.");\n    }\n}`,
+                        output: `Accessing element at index 10...\nError: Array index is out of bounds.\nException message: Index 10 out of bounds for length 5\nThe 'finally' block always executes.\nProgram continues after try-catch-finally.`,
                         viva: [
                             { q: "What is an exception?", a: "An event that disrupts the normal flow of a program. Exception handling manages these runtime errors gracefully." },
                             { q: "Why is the order of `catch` blocks important?", a: "`catch` blocks must be ordered from most specific to most general. A general `catch (Exception e)` placed first will make more specific blocks unreachable." },
@@ -131,8 +131,8 @@
                     },
                     {
                         title: "Two Threads for Even and Odd Numbers",
-                        code: `class EvenThread extends Thread {\n    public void run() { /* prints even numbers */ }\n}\nclass OddThread extends Thread {\n    public void run() { /* prints odd numbers */ }\n}\n\npublic class EvenOddThreads {\n    public static void main(String[] args) {\n        new EvenThread().start();\n        new OddThread().start();\n    }\n}`,
-                        output: `Odd:  1\nEven: 2\nOdd:  3\nEven: 4\n... (Order may vary)`,
+                        code: `class EvenThread extends Thread {\n    public void run() {\n        try {\n            for (int i = 2; i <= 10; i += 2) {\n                System.out.println("Even: " + i);\n                Thread.sleep(500); // Pause for 500ms\n            }\n        } catch (InterruptedException e) {\n            System.out.println("Even thread interrupted.");\n        }\n    }\n}\n\nclass OddThread extends Thread {\n    public void run() {\n        try {\n            for (int i = 1; i <= 10; i += 2) {\n                System.out.println("Odd:  " + i);\n                Thread.sleep(500); // Pause for 500ms\n            }\n        } catch (InterruptedException e) {\n            System.out.println("Odd thread interrupted.");\n        }\n    }\n}\n\npublic class EvenOddThreads {\n    public static void main(String[] args) {\n        EvenThread even = new EvenThread();\n        OddThread odd = new OddThread();\n        even.start();\n        odd.start();\n    }\n}`,
+                        output: `Even: 2\nOdd:  1\nEven: 4\nOdd:  3\nEven: 6\nOdd:  5\n... (Order may vary due to thread scheduling)`,
                         viva: [
                             { q: "What is a thread?", a: "The smallest unit of execution within a process. Multithreading allows a process to run multiple threads concurrently." },
                             { q: "Difference between `thread.start()` and `thread.run()`?", a: "`start()` creates a new thread and calls `run()` in it. Calling `run()` directly executes the code in the current thread, with no multithreading." },
@@ -258,5 +258,4 @@
     </script>
 </body>
 </html>
-
 
