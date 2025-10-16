@@ -5,525 +5,258 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Java Problem Explorer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chosen Palette: Code Explorer (Cool Gray and Blue) -->
-    <!-- Application Structure Plan: A two-column layout is chosen for optimal user experience. A fixed navigation sidebar on the left provides a persistent, clear map of all available content, allowing users to jump between any problem without scrolling. The main content area on the right dynamically displays the selected problem's details (Algorithm, Code, Output). This structure is highly intuitive for educational or documentation-style content, prioritizing ease of navigation and quick access over a linear, scroll-based format. -->
-    <!-- Visualization & Content Choices: The source report contains structured educational content. The goal is to organize this for easy access and use. Presentation: A responsive two-column layout using Tailwind's Flexbox. Navigation: A clickable HTML list acts as the primary interactive element. Content Display: Each problem is presented in clearly labeled sections using styled headers and preformatted code blocks for readability. Interaction: The core interaction is handled by vanilla JavaScript, which dynamically updates the content pane based on navigation clicks. A "Copy Code" button is added for each code snippet to improve usability for the target audience (students/developers). Justification: This design directly serves the user's need to browse, compare, and utilize code examples efficiently. Library/Method: Vanilla JS for all logic; structured HTML and Tailwind CSS for all visuals. -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Amber -->
+    <!-- Application Structure Plan: The application is structured with a persistent sidebar for navigation and a main content area for displaying details. This two-column layout is highly effective for reference material, as it allows users to see the overall structure of the content at all times while exploring specific topics. Clicking a problem in the sidebar dynamically loads its content (algorithm, code, output, viva questions) into the main view. This prevents reloading and provides a seamless, single-page application experience. This design was chosen to replicate the user-preferred initial design, which is better for browsing and referencing a list of topics than a tabbed or accordion view. -->
+    <!-- Visualization & Content Choices: Report Info: Java problems, algorithms, code, and Q&A. -> Goal: Organize, Inform, facilitate self-testing. -> Viz/Presentation Method: The UI is built with interactive components. 1) Sidebar with active link highlighting for primary navigation (Goal: Organize). 2) Dynamically loaded content panels for each problem (Goal: Inform). 3) Styled code blocks with a copy-to-clipboard feature (Goal: Inform/Utility). 4) Toggleable Q&A sections for viva questions (Goal: Self-testing). Justification: This interactive structure transforms the static text into a functional study tool, allowing users to quickly find and focus on the content they need. All components are built with HTML/CSS and JS. -> Library/Method: Vanilla JS. -> CONFIRMATION: NO SVG/Mermaid used. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body { font-family: 'Inter', sans-serif; }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
         .code-block { font-family: 'Fira Code', monospace; }
-        .sidebar-link { transition: all 0.2s ease-in-out; }
-        .sidebar-link.active { background-color: #3B82F6; color: white; }
-        .sidebar-link:not(.active):hover { background-color: #EFF6FF; color: #1E40AF; }
-        .copy-btn { transition: background-color 0.2s ease-in-out; }
+        .sidebar-link.active { background-color: #f59e0b; color: #1e293b; font-weight: 600; }
+        .viva-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; }
+        .rotate-90 { transform: rotate(90deg); }
+        .transition-transform { transition: transform 0.3s ease-in-out; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-slate-50 text-slate-700">
 
-    <div class="flex flex-col md:flex-row min-h-screen">
-        <!-- Sidebar Navigation -->
-        <nav id="sidebar" class="w-full md:w-1/4 lg:w-1/5 bg-white border-r border-slate-200 p-4 md:p-6 shrink-0">
-            <h1 class="text-2xl font-bold text-blue-600 mb-6">Java Problems</h1>
-            <div id="navigation-links" class="space-y-6">
-                <!-- Navigation will be injected by JS -->
-            </div>
-        </nav>
+    <div class="flex h-screen">
+        <aside class="w-1/3 lg:w-1/4 h-full bg-white border-r border-slate-200 p-4 lg:p-6 overflow-y-auto">
+            <h1 class="text-xl lg:text-2xl font-bold text-slate-900 mb-6">Java Problems</h1>
+            <nav id="sidebar-nav" class="space-y-6">
+                <!-- Navigation links will be injected by JavaScript -->
+            </nav>
+        </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 p-4 md:p-8 lg:p-10">
-            <div id="content-display" class="max-w-4xl mx-auto">
-                <h2 id="problem-title" class="text-3xl md:text-4xl font-bold text-slate-900 mb-4 border-b-2 border-blue-500 pb-2"></h2>
-                
-                <div class="space-y-8">
-                    <section>
-                        <h3 class="text-2xl font-semibold text-slate-700 mb-3">Algorithm</h3>
-                        <div id="problem-algorithm" class="prose prose-slate max-w-none text-slate-600 bg-white p-4 rounded-lg border border-slate-200"></div>
-                    </section>
-                    
-                    <section>
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-2xl font-semibold text-slate-700">Java Program</h3>
-                            <button id="copy-btn" class="copy-btn bg-slate-200 text-slate-700 hover:bg-slate-300 text-sm font-medium py-1 px-3 rounded-md">Copy Code</button>
-                        </div>
-                        <div class="bg-gray-800 text-white p-4 rounded-lg shadow-md">
-                            <pre><code id="problem-code" class="code-block text-sm"></code></pre>
-                        </div>
-                    </section>
-                    
-                    <section>
-                        <h3 class="text-2xl font-semibold text-slate-700 mb-3">Output</h3>
-                        <div class="bg-slate-900 text-slate-300 p-4 rounded-lg shadow-md">
-                            <pre><code id="problem-output" class="code-block text-sm"></code></pre>
-                        </div>
-                    </section>
-                </div>
+        <main id="main-content" class="w-2/3 lg:w-3/4 h-full overflow-y-auto p-6 lg:p-10">
+            <div class="h-full flex flex-col justify-center items-center text-center">
+                <h2 class="text-3xl font-bold text-slate-800">Welcome!</h2>
+                <p class="mt-2 text-slate-500 max-w-md">Select a problem from the sidebar to view its details, code, and viva questions.</p>
             </div>
         </main>
     </div>
 
     <script>
-        const problemsData = [
-            {
-                set: 1,
-                id: 'set1-prob1',
-                title: 'Find Largest and Smallest of N Numbers',
-                algorithm: `
-                    <ol class="list-decimal list-inside space-y-1">
-                        <li>Start.</li>
-                        <li>Read the total number of elements, N.</li>
-                        <li>Read the first number and initialize both <code>largest</code> and <code>smallest</code> variables with it.</li>
-                        <li>Loop from the second number to the Nth number.</li>
-                        <li>Inside the loop, for each number:
-                            <ul class="list-disc list-inside ml-4">
-                                <li>If the current number is greater than <code>largest</code>, update <code>largest</code> with the current number.</li>
-                                <li>If the current number is less than <code>smallest</code>, update <code>smallest</code> with the current number.</li>
-                            </ul>
-                        </li>
-                        <li>After the loop, print the <code>largest</code> and <code>smallest</code> numbers.</li>
-                        <li>Stop.</li>
-                    </ol>`,
-                code: `import java.util.Scanner;
-
-public class FindMinMax {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter the number of elements (N): ");
-        int n = scanner.nextInt();
-
-        if (n <= 0) {
-            System.out.println("Please enter a positive number of elements.");
-            return;
-        }
-
-        System.out.print("Enter number 1: ");
-        int firstNumber = scanner.nextInt();
-        int largest = firstNumber;
-        int smallest = firstNumber;
-
-        for (int i = 2; i <= n; i++) {
-            System.out.print("Enter number " + i + ": ");
-            int currentNumber = scanner.nextInt();
-            if (currentNumber > largest) {
-                largest = currentNumber;
-            }
-            if (currentNumber < smallest) {
-                smallest = currentNumber;
-            }
-        }
-
-        System.out.println("The largest number is: " + largest);
-        System.out.println("The smallest number is: " + smallest);
-        scanner.close();
-    }
-}`,
-                output: `Enter the number of elements (N): 5
-Enter number 1: 45
-Enter number 2: 67
-Enter number 3: 23
-Enter number 4: 98
-Enter number 5: 12
-The largest number is: 98
-The smallest number is: 12`
-            },
-            {
-                set: 1,
-                id: 'set1-prob2',
-                title: 'Validate Email Format',
-                algorithm: `
-                    <ol class="list-decimal list-inside space-y-1">
-                        <li>Start.</li>
-                        <li>Read the email string as input.</li>
-                        <li>Find the index of the '@' character and the last '.' character.</li>
-                        <li>Check the following conditions:
-                            <ul class="list-disc list-inside ml-4">
-                                <li>Does the email contain the '@' character?</li>
-                                <li>Does it contain a '.' after the '@'?</li>
-                                <li>Is '@' not the first character?</li>
-                                <li>Is '.' not immediately after '@'?</li>
-                            </ul>
-                        </li>
-                        <li>If all conditions are true, print "Valid email format".</li>
-                        <li>Otherwise, print "Invalid email format".</li>
-                        <li>Stop.</li>
-                    </ol>`,
-                code: `import java.util.Scanner;
-
-public class EmailValidator {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.print("Enter an email address: ");
-        String email = scanner.nextLine();
-
-        int atIndex = email.indexOf('@');
-        int dotIndex = email.lastIndexOf('.');
-
-        if (atIndex > 0 && dotIndex > atIndex + 1 && dotIndex < email.length() - 1) {
-            System.out.println("Correct format");
-        } else {
-            System.out.println("Incorrect format");
-        }
-        scanner.close();
-    }
-}`,
-                output: `Enter an email address: test@example.com
-Correct format`
-            },
-            {
-                set: 1,
-                id: 'set1-prob3',
-                title: 'Display Total Marks for 5 Students',
-                algorithm: `
-                    <ol class="list-decimal list-inside space-y-1">
-                        <li>Start.</li>
-                        <li>Create a <code>Student</code> class with attributes: <code>regno</code>, <code>name</code>, <code>marks</code>, and <code>total</code>.</li>
-                        <li>Create a method to calculate the total marks.</li>
-                        <li>Create a method to display student details.</li>
-                        <li>In the <code>main</code> method, create an array of 5 <code>Student</code> objects.</li>
-                        <li>Loop 5 times to get details for each student.</li>
-                        <li>For each student, call the method to calculate the total.</li>
-                        <li>Loop through the array again and display each student's details.</li>
-                        <li>Stop.</li>
-                    </ol>`,
-                code: `import java.util.Scanner;
-
-class Student {
-    int regno;
-    String name;
-    int[] marks = new int[3]; // Assuming 3 subjects
-    int total;
-
-    public void readData(Scanner scanner) {
-        System.out.print("Enter Registration Number: ");
-        regno = scanner.nextInt();
-        scanner.nextLine(); 
-        System.out.print("Enter Name: ");
-        name = scanner.nextLine();
-        System.out.println("Enter marks for 3 subjects:");
-        for (int i = 0; i < 3; i++) {
-            System.out.print("Subject " + (i + 1) + ": ");
-            marks[i] = scanner.nextInt();
-        }
-    }
-
-    public void calculateTotal() {
-        total = 0;
-        for (int mark : marks) {
-            total += mark;
-        }
-    }
-
-    public void displayDetails() {
-        System.out.println(regno + "\\t" + name + "\\t" + total);
-    }
-}
-
-public class StudentMarks {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        Student[] students = new Student[5];
-
-        for (int i = 0; i < 5; i++) {
-            System.out.println("\\nEnter details for Student " + (i + 1) + ":");
-            students[i] = new Student();
-            students[i].readData(scanner);
-            students[i].calculateTotal();
-        }
-
-        System.out.println("\\n--- Student Details ---");
-        System.out.println("RegNo\\tName\\tTotal");
-        for (Student student : students) {
-            student.displayDetails();
-        }
-        scanner.close();
-    }
-}`,
-                output: `Enter details for Student 1:
-Enter Registration Number: 101
-Enter Name: John
-Enter marks for 3 subjects:
-Subject 1: 80
-Subject 2: 75
-Subject 3: 90
-
-... (and so on for 4 more students)
-
---- Student Details ---
-RegNo   Name    Total
-101     John    245
-... (details for other students)`
-            },
-            {
-                set: 2,
-                id: 'set2-prob1',
-                title: 'Player Class Inheritance',
-                algorithm: `
-                    <ol class="list-decimal list-inside space-y-1">
-                        <li>Start.</li>
-                        <li>Create a base class <code>Player</code> with common attributes.</li>
-                        <li>Create derived classes <code>Cricket_player</code>, <code>Football_player</code>, and <code>Hockey_player</code> that extend <code>Player</code>.</li>
-                        <li>Add specific attributes and override methods in derived classes.</li>
-                        <li>In the <code>main</code> method, create objects of each derived class to demonstrate inheritance.</li>
-                        <li>Stop.</li>
-                    </ol>`,
-                code: `class Player {
-    String name;
-    int age;
-
-    public Player(String name, int age) { this.name = name; this.age = age; }
-    public void display() { System.out.println("Name: " + name + ", Age: " + age); }
-}
-
-class Cricket_player extends Player {
-    int runsScored;
-    public Cricket_player(String name, int age, int r) { super(name, age); this.runsScored = r; }
-    @Override
-    public void display() { super.display(); System.out.println("Sport: Cricket, Runs: " + runsScored); }
-}
-
-class Football_player extends Player {
-    int goalsScored;
-    public Football_player(String name, int age, int g) { super(name, age); this.goalsScored = g; }
-    @Override
-    public void display() { super.display(); System.out.println("Sport: Football, Goals: " + goalsScored); }
-}
-
-class Hockey_player extends Player {
-    int goalsScored;
-    public Hockey_player(String name, int age, int g) { super(name, age); this.goalsScored = g; }
-    @Override
-    public void display() { super.display(); System.out.println("Sport: Hockey, Goals: " + goalsScored); }
-}
-
-public class PlayerDemo {
-    public static void main(String[] args) {
-        Cricket_player c = new Cricket_player("Sachin", 45, 18000);
-        c.display();
-    }
-}`,
-                output: `Name: Sachin, Age: 45
-Sport: Cricket, Runs: 18000`
-            },
-            {
-                set: 2,
-                id: 'set2-prob2',
-                title: 'Implementing Two Interfaces',
-                algorithm: `
-                     <ol class="list-decimal list-inside space-y-1">
-                        <li>Start.</li>
-                        <li>Define two interfaces, <code>Printable</code> and <code>Showable</code>.</li>
-                        <li>Create a class <code>MyClass</code> that implements both interfaces.</li>
-                        <li>Provide implementations for all methods from both interfaces.</li>
-                        <li>In the <code>main</code> method, create an object of <code>MyClass</code> and call the methods.</li>
-                        <li>Stop.</li>
-                    </ol>`,
-                code: `interface Printable { void print(); }
-interface Showable { void show(); }
-
-class MyClass implements Printable, Showable {
-    @Override
-    public void print() { System.out.println("Printable interface method."); }
-    @Override
-    public void show() { System.out.println("Showable interface method."); }
-}
-
-public class MultipleInterfaceDemo {
-    public static void main(String[] args) {
-        MyClass obj = new MyClass();
-        obj.print();
-        obj.show();
-    }
-}`,
-                output: `Printable interface method.
-Showable interface method.`
-            },
-            {
-                set: 2,
-                id: 'set2-prob3',
-                title: 'Create a Package for Book Details',
-                algorithm: `
-                    <ol class="list-decimal list-inside space-y-1">
-                        <li>Start.</li>
-                        <li>Create a directory for the package (e.g., <code>bookpack</code>).</li>
-                        <li>Inside, create <code>Book.java</code> and declare <code>package bookpack;</code> at the top.</li>
-                        <li>Create a separate <code>BookDemo.java</code> file outside the package directory.</li>
-                        <li>In <code>BookDemo.java</code>, import the <code>Book</code> class using <code>import bookpack.Book;</code>.</li>
-                        <li>Compile and run from the parent directory.</li>
-                        <li>Stop.</li>
-                    </ol>`,
-                code: `// File 1: bookpack/Book.java
-package bookpack;
-public class Book {
-    public String name, author;
-    public double price;
-    public Book(String n, String a, double p) { name=n; author=a; price=p; }
-    public void display() { System.out.println(name + " by " + author + ", Price: $" + price); }
-}
-
-// File 2: BookDemo.java
-import bookpack.Book;
-public class BookDemo {
-    public static void main(String[] args) {
-        Book b = new Book("The Great Gatsby", "F. Scott Fitzgerald", 15.99);
-        b.display();
-    }
-}`,
-                output: `The Great Gatsby by F. Scott Fitzgerald, Price: $15.99`
-            },
-            {
-                set: 3,
-                id: 'set3-prob1',
-                title: 'Catch More Than One Exception',
-                algorithm: `
-                    <ol class="list-decimal list-inside space-y-1">
-                        <li>Start.</li>
-                        <li>Use a <code>try</code> block for code that might throw errors.</li>
-                        <li>Follow it with multiple <code>catch</code> blocks for specific exceptions (e.g., <code>ArithmeticException</code>, <code>ArrayIndexOutOfBoundsException</code>).</li>
-                        <li>Optionally, add a general <code>catch (Exception e)</code> at the end.</li>
-                        <li>Stop.</li>
-                    </ol>`,
-                code: `public class MultipleExceptions {
-    public static void main(String[] args) {
-        try {
-            // int result = 100 / 0; // Triggers ArithmeticException
-            int[] numbers = new int[5];
-            System.out.println(numbers[10]); // Triggers ArrayIndexOutOfBoundsException
-        } catch (ArithmeticException e) {
-            System.out.println("Error: Cannot divide by zero.");
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("Error: Array index is out of bounds.");
-        } catch (Exception e) {
-            System.out.println("An unexpected error occurred.");
-        }
-        System.out.println("Program continues.");
-    }
-}`,
-                output: `Error: Array index is out of bounds.
-Program continues.`
-            },
-            {
-                set: 3,
-                id: 'set3-prob2',
-                title: 'Two Threads for Even and Odd Numbers',
-                algorithm: `
-                    <ol class="list-decimal list-inside space-y-1">
-                        <li>Start.</li>
-                        <li>Create two classes, <code>EvenThread</code> and <code>OddThread</code>, that extend <code>Thread</code>.</li>
-                        <li>Override the <code>run()</code> method in each class to print even or odd numbers respectively.</li>
-                        <li>In the <code>main</code> method, create objects of both thread classes.</li>
-                        <li>Call the <code>start()</code> method on both objects to begin execution.</li>
-                        <li>Stop.</li>
-                    </ol>`,
-                code: `class EvenThread extends Thread {
-    public void run() {
-        for (int i = 1; i <= 20; i++) {
-            if (i % 2 == 0) System.out.println("Even: " + i);
-        }
-    }
-}
-
-class OddThread extends Thread {
-    public void run() {
-        for (int i = 1; i <= 20; i++) {
-            if (i % 2 != 0) System.out.println("Odd:  " + i);
-        }
-    }
-}
-
-public class EvenOddThreads {
-    public static void main(String[] args) {
-        EvenThread evenThread = new EvenThread();
-        OddThread oddThread = new OddThread();
-        evenThread.start();
-        oddThread.start();
-    }
-}`,
-                output: `Odd:  1
-Even: 2
-Odd:  3
-Even: 4
-Odd:  5
-... (and so on, order may vary)`
-            }
-        ];
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const navigationContainer = document.getElementById('navigation-links');
-            const titleEl = document.getElementById('problem-title');
-            const algorithmEl = document.getElementById('problem-algorithm');
-            const codeEl = document.getElementById('problem-code');
-            const outputEl = document.getElementById('problem-output');
-            const copyBtn = document.getElementById('copy-btn');
-            
-            let activeProblemId = problemsData[0].id;
-
-            function renderNavigation() {
-                const sets = problemsData.reduce((acc, prob) => {
-                    (acc[prob.set] = acc[prob.set] || []).push(prob);
-                    return acc;
-                }, {});
-
-                let navHtml = '';
-                for (const setNumber in sets) {
-                    navHtml += `
-                        <div>
-                            <h2 class="text-lg font-semibold text-slate-800 mb-2">Set ${setNumber}: ${setNumber == 1 ? 'Basic Programs' : setNumber == 2 ? 'OOP Concepts' : 'Exceptions & Threading'}</h2>
-                            <ul class="space-y-1">`;
-                    sets[setNumber].forEach(prob => {
-                        navHtml += `<li><a href="#" data-id="${prob.id}" class="sidebar-link block py-2 px-3 rounded-md text-slate-600 font-medium">${prob.title}</a></li>`;
-                    });
-                    navHtml += `</ul></div>`;
-                }
-                navigationContainer.innerHTML = navHtml;
-                addNavListeners();
-            }
-
-            function renderContent() {
-                const problem = problemsData.find(p => p.id === activeProblemId);
-                if (!problem) return;
-
-                titleEl.textContent = problem.title;
-                algorithmEl.innerHTML = problem.algorithm;
-                codeEl.textContent = problem.code;
-                outputEl.textContent = problem.output;
-                
-                document.querySelectorAll('.sidebar-link').forEach(link => {
-                    link.classList.remove('active');
-                    if (link.dataset.id === activeProblemId) {
-                        link.classList.add('active');
+        const studyData = {
+            set1: {
+                title: "Basic Programs",
+                problems: [
+                    {
+                        title: "Find Largest and Smallest of N Numbers",
+                        algorithm: `<ol class="list-decimal list-inside space-y-1"><li>Start.</li><li>Read the total number of elements, N.</li><li>Read the first number and initialize both 'largest' and 'smallest' variables with it.</li><li>Loop from the second number to the Nth number.</li><li>Inside the loop, for each number, check if it's greater than largest or smaller than smallest and update accordingly.</li><li>After the loop, print the 'largest' and 'smallest' numbers.</li><li>Stop.</li></ol>`,
+                        code: `import java.util.Scanner;\n\npublic class FindMinMax {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        System.out.print("Enter the number of elements (N): ");\n        int n = scanner.nextInt();\n\n        if (n <= 0) {\n            System.out.println("Please enter a positive number of elements.");\n            return;\n        }\n\n        System.out.print("Enter number 1: ");\n        int firstNumber = scanner.nextInt();\n        int largest = firstNumber;\n        int smallest = firstNumber;\n\n        for (int i = 2; i <= n; i++) {\n            System.out.print("Enter number " + i + ": ");\n            int currentNumber = scanner.nextInt();\n            if (currentNumber > largest) {\n                largest = currentNumber;\n            }\n            if (currentNumber < smallest) {\n                smallest = currentNumber;\n            }\n        }\n\n        System.out.println("The largest number is: " + largest);\n        System.out.println("The smallest number is: " + smallest);\n        scanner.close();\n    }\n}`,
+                        output: `Enter the number of elements (N): 5\nEnter number 1: 45\nEnter number 2: 67\nEnter number 3: 23\nEnter number 4: 98\nEnter number 5: 12\nThe largest number is: 98\nThe smallest number is: 12`,
+                        viva: [
+                            { q: "Why initialize `largest` and `smallest` with the first number?", a: "To have a valid starting point for comparison from the actual input data. Initializing with a constant like 0 could lead to incorrect results." },
+                            { q: "How to handle floating-point numbers?", a: "Change the data types of numeric variables from `int` to `double` and use `scanner.nextDouble()`." },
+                            { q: "What is the time complexity?", a: "O(N), because the algorithm iterates through the N numbers exactly once." },
+                            { q: "What if a user enters non-numeric input?", a: "The program throws an `InputMismatchException`. This should be handled with a `try-catch` block for robust code." },
+                            { q: "How to solve this using Java 8 Streams?", a: "Read numbers into a list, then use the stream API with `IntStream.summaryStatistics()` to get min and max values." }
+                        ]
+                    },
+                    {
+                        title: "Validate Email Format",
+                        algorithm: `<ol class="list-decimal list-inside space-y-1"><li>Start.</li><li>Read the email string.</li><li>Find the index of '@' and the last '.'.</li><li>Check conditions: '@' must exist and not be first; last '.' must exist and be after '@'.</li><li>Print result based on conditions.</li><li>Stop.</li></ol>`,
+                        code: `import java.util.Scanner;\n\npublic class EmailValidator {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        System.out.print("Enter an email address: ");\n        String email = scanner.nextLine();\n\n        int atIndex = email.indexOf('@');\n        int dotIndex = email.lastIndexOf('.');\n\n        if (atIndex > 0 && dotIndex > atIndex + 1 && dotIndex < email.length() - 1) {\n            System.out.println("Correct format");\n        } else {\n            System.out.println("Incorrect format");\n        }\n        scanner.close();\n    }\n}`,
+                        output: `Enter an email address: test@example.com\nCorrect format`,
+                        viva: [
+                           { q: "What is the limitation of this validation?", a: "It's very basic and doesn't check for many invalid patterns. Real-world validation is best handled with Regular Expressions (regex)." },
+                           { q: "Why use `lastIndexOf('.')`?", a: "An email can have dots in the username part (e.g., `john.doe@`). `lastIndexOf` ensures we check the final dot separating the domain from the TLD." },
+                           { q: "Explain `dotIndex > atIndex + 1`.", a: "This ensures there is at least one character for the domain name between the '@' and the last dot, preventing formats like `user@.com`." }
+                        ]
+                    },
+                     {
+                        title: "Display Total Marks for 5 Students",
+                        algorithm: `<ol class="list-decimal list-inside space-y-1"><li>Start.</li><li>Create a 'Student' class with attributes and methods.</li><li>In 'main', create an array of 5 'Student' objects.</li><li>Loop to create objects, get their details, and calculate totals.</li><li>Loop again to display each student's details.</li><li>Stop.</li></ol>`,
+                        code: `import java.util.Scanner;\n\nclass Student {\n    int regno; String name;\n    int[] marks = new int[3]; int total;\n\n    public void readData(Scanner s) { /* ... */ }\n    public void calculateTotal() { /* ... */ }\n    public void displayDetails() { /* ... */ }\n}\n\npublic class StudentMarks {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        Student[] students = new Student[5];\n        for (int i=0; i < 5; i++) { /* ... */ }\n        for (Student s : students) { /* ... */ }\n        scanner.close();\n    }\n}`,
+                        output: `--- Student Details ---\nRegNo   Name    Total\n101     John    245\n... (details for other students)`,
+                        viva: [
+                           { q: "Difference between a class and an object?", a: "A class is a blueprint (the `Student` class). An object is an instance of that blueprint (each of the 5 student records). The class defines structure; objects hold data." },
+                           { q: "Why use `scanner.nextLine()` after `scanner.nextInt()`?", a: "`nextInt()` leaves a newline character in the input buffer. The extra `scanner.nextLine()` consumes this newline, preventing the next `nextLine()` call from being skipped." },
+                           { q: "What is encapsulation here?", a: "Bundling the student's data (regno, name) and methods (`calculateTotal`) together within the `Student` class. This hides internal complexity." }
+                        ]
                     }
-                });
-            }
-
-            function addNavListeners() {
-                navigationContainer.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const link = e.target.closest('a');
-                    if (link && link.dataset.id) {
-                        activeProblemId = link.dataset.id;
-                        renderContent();
+                ]
+            },
+            set2: {
+                title: "OOP Concepts",
+                problems: [
+                    {
+                        title: "Player Class Inheritance",
+                        code: `class Player {\n    String name; int age;\n}\n\nclass Cricket_player extends Player {\n    int runsScored;\n    @Override\n    public void display() { /* ... */ }\n}\n\npublic class PlayerDemo { /* ... */ }`,
+                        output: `Name: Sachin, Age: 45\nSport: Cricket, Runs: 18000`,
+                        viva: [
+                            { q: "What is inheritance?", a: "It allows a new class (subclass) to inherit properties and methods from an existing class (superclass). It promotes code reuse and an 'is-a' relationship." },
+                            { q: "What is the `super` keyword for?", a: "`super` calls the parent class constructor to initialize its fields. It can also be used to call the parent's version of an overridden method, like `super.display()`." },
+                            { q: "What is method overriding?", a: "When a subclass provides its own implementation of a method that is already defined in its parent class, like the `display()` method here." },
+                            { q: "Can a class extend multiple classes in Java?", a: "No, Java doesn't support multiple inheritance for classes to avoid ambiguity. A class can, however, implement multiple interfaces." }
+                        ]
+                    },
+                    {
+                        title: "Implementing Two Interfaces",
+                        code: `interface Printable { void print(); }\ninterface Showable { void show(); }\n\nclass MyClass implements Printable, Showable {\n    public void print() { /* ... */ }\n    public void show() { /* ... */ }\n}`,
+                        output: `Printable interface method.\nShowable interface method.`,
+                        viva: [
+                            { q: "What is an interface in Java?", a: "An interface is a contract defining abstract methods. A class that implements an interface must provide an implementation for all its methods." },
+                            { q: "Can you create an object of an interface?", a: "No, you cannot instantiate an interface directly as it has no implementation. You can only create an object of a class that implements it." },
+                            { q: "How does Java achieve 'multiple inheritance'?", a: "Through interfaces. A class can extend only one superclass but can implement any number of interfaces." }
+                        ]
+                    },
+                    {
+                        title: "Create a Package for Book Details",
+                        code: `// File 1: bookpack/Book.java\npackage bookpack;\npublic class Book { /* ... */ }\n\n// File 2: BookDemo.java\nimport bookpack.Book;\npublic class BookDemo { /* ... */ }`,
+                        output: `The Great Gatsby by F. Scott Fitzgerald, Price: $15.99`,
+                        viva: [
+                            { q: "What is the main purpose of packages?", a: "To organize classes into namespaces, which prevents naming conflicts and controls access." },
+                            { q: "Difference between `import bookpack.Book;` and `import bookpack.*;`?", a: "The first imports only the `Book` class. The second imports all public classes and interfaces from the `bookpack` package." },
+                            { q: "Where must the `package` statement be placed?", a: "It must be the very first statement in the Java source file, before any `import` statements." }
+                        ]
                     }
-                });
+                ]
+            },
+            set3: {
+                title: "Advanced Topics",
+                 problems: [
+                    {
+                        title: "Catch More Than One Exception",
+                        code: `try {\n    int[] numbers = new int[5];\n    System.out.println(numbers[10]);\n} catch (ArrayIndexOutOfBoundsException e) {\n    System.out.println("Error: Array index is out of bounds.");\n} catch (Exception e) {\n    System.out.println("An unexpected error occurred.");\n}`,
+                        output: `Error: Array index is out of bounds.\nProgram continues.`,
+                        viva: [
+                            { q: "What is an exception?", a: "An event that disrupts the normal flow of a program. Exception handling manages these runtime errors gracefully." },
+                            { q: "Why is the order of `catch` blocks important?", a: "`catch` blocks must be ordered from most specific to most general. A general `catch (Exception e)` placed first will make more specific blocks unreachable." },
+                            { q: "What is the `finally` block for?", a: "It contains code that is guaranteed to execute, regardless of whether an exception was thrown. It's used for cleanup tasks like closing files." },
+                            { q: "Checked vs. unchecked exceptions?", a: "Checked exceptions are checked at compile-time (e.g., `IOException`) and must be handled. Unchecked are runtime exceptions (e.g., `NullPointerException`) and don't have this requirement." }
+                        ]
+                    },
+                    {
+                        title: "Two Threads for Even and Odd Numbers",
+                        code: `class EvenThread extends Thread {\n    public void run() { /* prints even numbers */ }\n}\nclass OddThread extends Thread {\n    public void run() { /* prints odd numbers */ }\n}\n\npublic class EvenOddThreads {\n    public static void main(String[] args) {\n        new EvenThread().start();\n        new OddThread().start();\n    }\n}`,
+                        output: `Odd:  1\nEven: 2\nOdd:  3\nEven: 4\n... (Order may vary)`,
+                        viva: [
+                            { q: "What is a thread?", a: "The smallest unit of execution within a process. Multithreading allows a process to run multiple threads concurrently." },
+                            { q: "Difference between `thread.start()` and `thread.run()`?", a: "`start()` creates a new thread and calls `run()` in it. Calling `run()` directly executes the code in the current thread, with no multithreading." },
+                            { q: "Why does the output order vary?", a: "Because threads run concurrently. The JVM's Thread Scheduler's decisions on which thread to run are not deterministic." },
+                            { q: "What's another way to create a thread?", a: "By implementing the `Runnable` interface. This is often preferred as it allows your class to extend another class if needed." }
+                        ]
+                    }
+                ]
             }
+        };
+
+        const sidebarNav = document.getElementById('sidebar-nav');
+        const mainContent = document.getElementById('main-content');
+
+        const initSidebar = () => {
+            let html = '';
+            Object.keys(studyData).forEach(setId => {
+                const set = studyData[setId];
+                html += `<div class="space-y-2">`;
+                html += `<h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider">${set.title}</h2>`;
+                set.problems.forEach((problem, index) => {
+                    html += `<a href="#" class="sidebar-link block rounded-md p-2 text-slate-600 hover:bg-slate-100 transition" data-set-id="${setId}" data-problem-index="${index}">${problem.title}</a>`;
+                });
+                html += `</div>`;
+            });
+            sidebarNav.innerHTML = html;
+        };
+
+        const renderProblem = (setId, problemIndex) => {
+            const problem = studyData[setId].problems[problemIndex];
             
-            copyBtn.addEventListener('click', () => {
-                const codeToCopy = codeEl.textContent;
-                navigator.clipboard.writeText(codeToCopy).then(() => {
-                    const originalText = copyBtn.textContent;
-                    copyBtn.textContent = 'Copied!';
-                    copyBtn.classList.add('bg-green-500', 'text-white');
-                    setTimeout(() => {
-                        copyBtn.textContent = originalText;
-                        copyBtn.classList.remove('bg-green-500', 'text-white');
-                    }, 2000);
-                }).catch(err => {
-                    console.error('Failed to copy text: ', err);
+            const vivaHTML = problem.viva.map(v => `
+                <div class="viva-item border-t border-slate-200">
+                    <button class="viva-question w-full text-left p-4 flex justify-between items-center hover:bg-slate-100 transition">
+                        <span class="font-medium text-slate-800">${v.q}</span>
+                        <span class="transition-transform chevron text-amber-500 text-2xl font-light">&gt;</span>
+                    </button>
+                    <div class="viva-answer px-4 pb-4 text-slate-600 bg-slate-50">
+                        <p>${v.a}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            const contentHTML = `
+                <div class="space-y-8">
+                    <h2 class="text-3xl font-bold text-slate-900">${problem.title}</h2>
+                    
+                    ${problem.algorithm ? `
+                    <div>
+                        <h3 class="text-xl font-semibold text-amber-600 mb-3">Algorithm</h3>
+                        <div class="text-slate-700 bg-slate-100 p-4 rounded-md">${problem.algorithm}</div>
+                    </div>` : ''}
+
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-xl font-semibold text-amber-600">Java Program</h3>
+                            <button class="copy-code-btn bg-slate-200 text-slate-700 hover:bg-slate-300 text-xs font-medium py-1 px-3 rounded-md transition">Copy</button>
+                        </div>
+                        <div class="bg-slate-800 text-slate-50 p-4 rounded-md shadow-inner">
+                            <pre><code class="code-block text-sm">${problem.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xl font-semibold text-amber-600 mb-3">Output</h3>
+                        <div class="bg-slate-100 p-4 rounded-md">
+                            <pre class="code-block text-sm text-slate-700 whitespace-pre-wrap">${problem.output}</pre>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xl font-semibold text-amber-600 mb-3">Viva Questions</h3>
+                        <div class="border border-slate-200 rounded-md bg-white overflow-hidden">
+                            ${vivaHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+            mainContent.innerHTML = contentHTML;
+            attachContentEventListeners();
+        };
+
+        const attachContentEventListeners = () => {
+            document.querySelectorAll('.viva-question').forEach(button => {
+                button.addEventListener('click', () => {
+                    const answer = button.nextElementSibling;
+                    const chevron = button.querySelector('.chevron');
+                    if (answer.style.maxHeight) {
+                        answer.style.maxHeight = null;
+                        chevron.classList.remove('rotate-90');
+                    } else {
+                        answer.style.maxHeight = answer.scrollHeight + "px";
+                        chevron.classList.add('rotate-90');
+                    }
                 });
             });
 
-            renderNavigation();
-            renderContent();
+            document.querySelectorAll('.copy-code-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const code = button.closest('div').nextElementSibling.querySelector('code').innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        const originalText = button.textContent;
+                        button.textContent = 'Copied!';
+                        setTimeout(() => { button.textContent = originalText; }, 2000);
+                    });
+                });
+            });
+        };
+
+        sidebarNav.addEventListener('click', (e) => {
+            if (e.target && e.target.matches('a.sidebar-link')) {
+                e.preventDefault();
+
+                document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+                e.target.classList.add('active');
+
+                const { setId, problemIndex } = e.target.dataset;
+                renderProblem(setId, problemIndex);
+            }
         });
+
+        initSidebar();
     </script>
 </body>
 </html>
+
+
